@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with hveto.  If not, see <http://www.gnu.org/licenses/>.
 
-"""HTML utilities for hveto safety studies, derived from hveto's html
+"""HTML utilities for hveto safety studies, derived from hveto's html some
+duplication, but we need to minimize mods to the daily runs
 """
 
 from __future__ import division
@@ -62,7 +63,8 @@ def wrap_html(func):
         # set page init args
         initargs = {
             'title': '%s Hveto | %d-%d' % (ifo, start, end),
-            'base': os.path.curdir,
+          #  'base': os.path.curdir,
+            'base': './',
         }
         for key in ['title', 'base']:
             if key in kwargs:
@@ -80,14 +82,16 @@ def wrap_html(func):
         else:
             iargs = initargs.copy()
             aboutdir = os.path.join(outdir, 'about')
-            if iargs['base'] == os.path.curdir:
-                iargs['base'] = os.path.pardir
+
             about = write_about_page(ifo, start, end, config, outdir=aboutdir,
                                      **iargs)
             if os.path.basename(about) == 'index.html':
                 about = about[:-10]
         # open page
-        page = gwhtml.new_bootstrap_page(navbar=None, **initargs)
+
+        page = gwhtml.new_bootstrap_page(navbar=None, **iargs)
+        mycss = 'https://ldvw.ligo.caltech.edu/public/hveto-safety.css'
+        page.link(href=mycss, rel='stylesheet', media='all')
         page.add(banner(ifo, start, end))
         # write content
         page.add(str(func(*args, **kwargs)))
@@ -105,21 +109,32 @@ def wrap_html(func):
         report = 'https://github.com/gwdetchar/hveto/issues'
         issues = markup.oneliner.a(
             'Report an issue', href=report, target='_blank')
-        gwhtml.close_page(page, index, about=about, link=link, issues=issues)
+        gwhtml.close_page(page, index, about=about, link=None, issues=issues)
         return index
     return decorated_func
 
-def add_file_download(page, path, label, text):
+
+def add_file_download(page, typ, descrip, fmt, path, odd=True):
     """Add a downloadable file to results page
     """
-    if os.path.exists(path):
-        l = gwhtml.html_link(path, label)
-        page.add(bold_param(text, l))
+    row_class = 'odd' if odd else 'even'
+    row_class += ' noborder'
+    page.tr(_class=row_class)
 
+    page.td(typ, _class=row_class)
+    page.td(descrip, _class=row_class)
+    page.td(fmt, _class=row_class)
+
+    if os.path.exists(path):
+        l = gwhtml.html_link(path, os.path.basename(path))
+    else:
+        l = 'n/a'
+    page.td(l, _class=row_class)
+    page.tr.close()
 
 @wrap_html
 def write_hveto_safety_page(rounds, thresh, inj_img=None):
-    """Write the Hveto results to HTML
+    """Write the Hveto safety results to HTML
 
     Parameters
     ----------
@@ -145,32 +160,43 @@ def write_hveto_safety_page(rounds, thresh, inj_img=None):
     """
 
     page = markup.page()
-    page.h2("Hveto safety study")
+
+    page.hr()
+    page.h3('Downloads')
     tableclass = 'table table-condensed table-hover table-responsive'
     page.table(class_=tableclass)
-    page.caption("Summary of Hierarchical Veto safety analysis.")
+    # make channel table header
+    page.thead()
+    page.tr()
+    for header in ['Type', 'Description', 'Format','Link']:
+        page.th(header, scope='row')
+    page.tr.close()
+    page.thead.close()
+    # make body
+    page.tbody()
 
-    page.h3('Input used')
-    add_file_download(page, './primary.h5', 'Primary (hwinj) triggers',
-                      'Download primary triggers used:')
-    add_file_download(page, './auxiliary.h5', 'Auxiliary (omicron) triggers',
-                      'Download auxiliary triggers used:')
-    add_file_download(page, './segment.xml.gz', 'Segment(s) used',
-                      'Download segment(s) analyzed:')
+    add_file_download(page, 'input', 'Primary (hwinj) triggers', 'HDF5',
+                      './primary.h5', True)
+    add_file_download(page, 'input', 'Auxiliary (omicron) triggers', 'HDF5',
+                      './auxiliary.h5', False)
+    add_file_download(page, 'input', 'Segment(s) used', 'LIGOLW (xml.gz)',
+                      './segment.xml.gz', True)
+    add_file_download(page, 'output', 'Channel summary', 'CSV',
+                      './safety_summary.csv', False)
 
-    page.h3('Downloadable output')
-    add_file_download(page, './safety_summary.csv', 'Channel summary as CSV',
-                      'Download channel summary (with at least '
-                      '1 trigger analyzed):')
-    add_file_download(page, './omega_times.txt', 'times for omega',
-                      'Download omega times (to run wdq_batch):')
+    page.tbody.close()
+    page.table.close()
+    page.hr()
 
     if inj_img:
+        page.h4('Calculated injections')
         caption = 'All injections'
         prim_plot = FancyPlot(inj_img, caption=caption)
         page.img(src=inj_img, class_='fancybox', alt=caption)
         page.br()
 
+    tableclass = 'table table-condensed table-hover table-responsive'
+    page.table(class_=tableclass)
     # make channel table header
     page.thead()
     page.tr()
@@ -380,11 +406,11 @@ def banner(ifo, start, end):
     page = markup.page()
     # write banner
     page.div(class_='page-header', role='banner')
-    page.h1("%s Hierarchical Veto" % ifo)
+    page.h1("%s Hierarchical veto safety study" % ifo)
     start_utc = tconvert(start)
     end_utc = tconvert(end)
-    page.h3('{:d}-{:d}'.format(int(start), int(end)))
-    page.h3('{:s} to {:s}'.format(str(start_utc), str(end_utc)))
+    page.h3('{:d}-{:d} ({:s} to {:s})'.format(int(start), int(end),
+                                              str(start_utc), str(end_utc)))
     page.div.close()
     return page()
 

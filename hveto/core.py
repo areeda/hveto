@@ -55,6 +55,7 @@ class HvetoRound(object):
         'plots',
         'files',
         'scans',
+        'rank',
         # Used by safety
         'unsafe',
         'n_coincs',
@@ -62,7 +63,7 @@ class HvetoRound(object):
     )
 
     def __init__(self, round, primary, segments=None, vetoes=None,
-                 plots=[], files={}):
+                 plots=[], files={}, rank=None):
         self.n = round
         self.primary = primary
         self.segments = segments
@@ -70,6 +71,7 @@ class HvetoRound(object):
         self.plots = []
         self.files = {}
         self.scans = None
+        self.rank = rank
         self.unsafe = False # used in safety studies to flag already known
         self.n_coincs = 0    # used in safety studies for report
         self.n_vetoed = 0
@@ -150,7 +152,8 @@ def find_all_coincidences(triggers, channel, snrs, windows):
     return coincs
 
 
-def find_max_significance(primary, auxiliary, channel, snrs, windows, livetime):
+def find_max_significance(primary, auxiliary, channel, snrs, windows,
+                          livetime):
     """Find the maximum Hveto significance for this primary-auxiliary pair
 
     Parameters
@@ -289,12 +292,14 @@ def find_coincidences(a, b, dt=1):
         in `b`
     """
     dx = dt/2.
+
     def _is_coincident(t):
         x = bisect_left(b, t-dx)  # find b >= t-dx
         y = bisect_right(b, t+dx)  # find b <= t+dx
         if x != y:
             return True
         return False
+
     out = numpy.zeros(a.size)
     for i, t in enumerate(a):
         out[i] = _is_coincident(t)

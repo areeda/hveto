@@ -151,8 +151,13 @@ def safety_calc(cp, logger, outdir, inifile,
     qcdir = os.path.join(outdir, 'qcplots')
     os.makedirs(qcdir, exist_ok=True)
 
-    tlim = [min(prim_as_tbl['time']), max(prim_as_tbl['time'])]
-    prim_qcplot = plot_table(prim_as_tbl, k, '.', tlim)
+    inj_strt = prim_as_tbl['time'].min()
+    inj_last = prim_as_tbl['time'].max()
+    tlim = [inj_strt -30, inj_last+30]
+    inj_fmax = prim_as_tbl['frequency'].max()
+    flim = [0, inj_fmax+100]
+    prim_qcplot = plot_table(prim_as_tbl, k, '.', tlim,
+                             ylim=flim, epoch=inj_strt)
 
     if args.qcplot:
         for k in auxiliary.keys():
@@ -441,7 +446,8 @@ def safety_calc(cp, logger, outdir, inifile,
                                     caption=ROUND_CAPTION['AUX_FREQUENCY_TIME'])
                     round.plots.append(png)
 
-                    round.unsafe = ifo + ':' + round.winner.name in unsafe
+                    munged_name = round.winner.name.replace('-', '_')
+                    round.unsafe = munged_name  in unsafe
 
                     rounds.append(round)
         # end of round processing, any channels left over
@@ -485,12 +491,13 @@ def safety_calc(cp, logger, outdir, inifile,
     htmlv['write_about_file'] = False
     for r in rounds:
         if r.winner.significance >= safety_min:
-            htmlv['base'] = os.path.curdir
+            htmlv['base'] = './'
             htmlv['html_file'] = 'hveto-round-%04d-summary.html' % r.n
             write_safety_round(ifo, start, end, r, safety_cutoff, **htmlv)
             logger.info('Round %d html written' % r.n)
 
     run_time = time.time() - jobstart
+    logger.info('Wrote index to {:s}, in {:s}'.format(index, outdir))
     logger.info('Safety runtime  %.1f sec' % run_time)
 
     return stat
@@ -499,7 +506,9 @@ def safety_calc(cp, logger, outdir, inifile,
 def abs_path(p):
     return os.path.abspath(os.path.expanduser(p))
 
-def plot_table(tbl, name, qcpath, tlim):
+
+def plot_table(tbl, name, qcpath, tlim, ylim=None, epoch=None):
+    """Event table plotter for examples"""
     qcplot = tbl.scatter('time', 'frequency', color='snr', vmin=0, vmax=75)
     ax = qcplot.gca()
     qcplot.suptitle(name, fontsize=18)
@@ -507,7 +516,15 @@ def plot_table(tbl, name, qcpath, tlim):
     ax.grid(b=True, which='minor', color='0.06', linestyle='dotted')
     ax.colorbar(label='SNR')
     ax.set_xlim(tlim[0], tlim[1])
-    ax.set_ylim(0, 2048)
+    if ylim:
+        ax.set_ylim(ylim[0], ylim[1])
+    else:
+        ax.set_ylim(0, 2048)
+
+    if epoch:
+        ax.set_epoch(epoch)
+
+    ax.set_ylabel('Frequency (Hz)')
 
     fname = name.replace(':', '-') + '.png'
     outfile = os.path.join(qcpath, fname)
@@ -529,10 +546,11 @@ if __name__ == "__main__":
 
     cin = parser.add_argument_group('Control options')
 
-    cin.add_argument('-f', '--config-file', action='append', default=[],
-                     type=abs_path,
-                     help='path to hveto configuration file(s), can be given '
-                          'multiple times (files read in order)')
+    parser.add_argument('-f', '--config-file', action='append', default=[],
+                        type=abs_path,
+                        help='path to hveto configuration file, can be given '
+                             'multiple times (files read in order)')
+
     cli.add_gps_start_stop_arguments(cin)
     cin.add_argument('-Q', '--qcplot', action='store_true',
                      help='Plot triggers for all input channels')
