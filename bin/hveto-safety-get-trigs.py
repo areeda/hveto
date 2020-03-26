@@ -57,7 +57,8 @@ def gps2utc(gps):
     utc = gps_time.datetime.strftime('%Y-%m-%d %H:%M:%S')
     return utc
 
-def get_events(tcache):
+
+def get_events(tcache, start, end):
     """Create abreviated event table from cache list"""
     trigs = EventTable.read(tcache, format='ligolw',
                             tablename='sngl_burst',
@@ -73,6 +74,7 @@ def get_events(tcache):
     ret['time'] = time
     ret['frequency'] = freq
     ret['snr'] = snr
+    ret = ret[(ret['time'] >= start) & (ret['time'] <= end)]
     return ret
 
 def plot_tbl(table, channel):
@@ -139,7 +141,7 @@ if __name__ == "__main__":
 
     prim = ifo + ':GDS-CALIB_STRAIN'
     prim_cache = find_trigger_files(prim, 'omicron', start, end)
-    prim_trigs = get_events(prim_cache)
+    prim_trigs = get_events(prim_cache, start, end)
     prim_trigs = prim_trigs[(prim_trigs['frequency']>15) &
                             (prim_trigs['frequency']<900)]
     prim_trigs['channel'] = prim
@@ -168,7 +170,7 @@ if __name__ == "__main__":
                     replace('_OMICRON', '')
             aux_cache = find_trigger_files(chan, 'omicron', aux_start, aux_end)
             if len(aux_cache) > 0:
-                aux_trigs = get_events(aux_cache)
+                aux_trigs = get_events(aux_cache, start, end)
                 if len(aux_trigs) > 0:
                     aux_trigs['channel'] = chan
                     aux_trigs.write(aux, path=chan)
