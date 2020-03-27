@@ -76,7 +76,7 @@ def get_events(tcache, start, end):
     ret['snr'] = snr
     before = len(ret)
     ret = ret[(ret['time'] >= start) & (ret['time'] <= end)]
-    logger.debug('Before time lim {:d} vs after: {:d}')
+    logger.debug('Before time lim {:d} vs after: {:d}'.format(before, len(ret)))
     return ret
 
 def plot_tbl(table, channel):
@@ -164,9 +164,14 @@ if __name__ == "__main__":
     trigfiles = glob.glob(trig_path+'/*_OMICRON')
 
     aux_file = args.outbase + '-auxiliary.h5'
-    aux_end = end + 10
-    aux_start = aux_end - 3600
-
+    if end - start < 1000:
+        aux_end = end + 10
+        aux_start = aux_end - 3600
+    else:
+        aux_end = end
+        aux_start = start
+    
+    logger.debug('Aux triggers using {:d} - {:d}'.format(aux_start, aux_end))
     with h5py.File(aux_file, 'w') as aux:
         for path in trigfiles:
             dirname = os.path.basename(path)
