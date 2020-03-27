@@ -74,7 +74,9 @@ def get_events(tcache, start, end):
     ret['time'] = time
     ret['frequency'] = freq
     ret['snr'] = snr
+    before = len(ret)
     ret = ret[(ret['time'] >= start) & (ret['time'] <= end)]
+    logger.debug('Before time lim {:d} vs after: {:d}')
     return ret
 
 def plot_tbl(table, channel):
@@ -104,6 +106,8 @@ if __name__ == "__main__":
         ifo = 'H1'
     elif 'ligo-la' in host:
         ifo = 'L1'
+
+    logger.debug('IFO set to {:s}'.format(ifo))
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      prog=__process_name__)
