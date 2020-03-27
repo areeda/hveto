@@ -170,8 +170,9 @@ if __name__ == "__main__":
     else:
         aux_end = end
         aux_start = start
-    
-    logger.debug('Aux triggers using {:d} - {:d}'.format(aux_start, aux_end))
+
+    logger.debug('Aux triggers using {:d} - {:d}'.
+                 format(int(aux_start), int(aux_end)))
     with h5py.File(aux_file, 'w') as aux:
         for path in trigfiles:
             dirname = os.path.basename(path)
