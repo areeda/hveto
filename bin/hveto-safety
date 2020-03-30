@@ -52,7 +52,7 @@ from hveto import (__version__, config, core, plot, html, utils)
 from hveto.triggers import (get_triggers, find_auxiliary_channels)
 from hveto.safety_html import (write_hveto_safety_page, write_safety_round)
 
-
+from hveto.safety_plotter import inj_comp_plot
 from hveto.safety_reader import safety_h5_read
 from gwdetchar.io.html import (OBSERVATORY_MAP, FancyPlot, cis_link)
 from hveto.plot import (HEADER_CAPTION, ROUND_CAPTION, get_column_label)
@@ -95,6 +95,10 @@ def safety_calc(cp, logger, outdir, inifile,
 
     logger.debug('Safety params: safety_cutoff: {:.2f}, safety_min: {:.2f}'.
                  format(safety_cutoff, safety_min))
+
+    ROUND_CAPTION['inj'] = 'Injection time comparision of primary and' \
+                            'auxiliary channel triggers'
+    ROUND_CAPTION['anim'] = 'ANIMATIO TO SEE WHICH INJECTIONS WERE SELECTED$@)'
 
     analysis = ifo + ':INJECTION'
 
@@ -444,6 +448,14 @@ def safety_calc(cp, logger, outdir, inifile,
                         logger.debug("Figure written to %s" % png)
                     png = FancyPlot(png,
                                     caption=ROUND_CAPTION['AUX_FREQUENCY_TIME'])
+                    round.plots.append(png)
+
+                    subp, anim = inj_comp_plot(name, prim_as_tbl, allaux,
+                                               cs.window, plotdir)
+                    png = FancyPlot(subp, caption=ROUND_CAPTION['inj'])
+                    round.plots.append(png)
+
+                    png = FancyPlot(anim, caption=ROUND_CAPTION['anim'])
                     round.plots.append(png)
 
                     munged_name = round.winner.name.replace('-', '_')
