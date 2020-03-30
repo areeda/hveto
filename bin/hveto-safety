@@ -96,9 +96,10 @@ def safety_calc(cp, logger, outdir, inifile,
     logger.debug('Safety params: safety_cutoff: {:.2f}, safety_min: {:.2f}'.
                  format(safety_cutoff, safety_min))
 
-    ROUND_CAPTION['inj'] = 'Injection time comparision of primary and' \
-                            'auxiliary channel triggers'
-    ROUND_CAPTION['anim'] = 'ANIMATIO TO SEE WHICH INJECTIONS WERE SELECTED$@)'
+    ROUND_CAPTION['inj'] = 'Injection time comparision of primary and ' \
+                           'auxiliary channel triggers'
+    ROUND_CAPTION['anim'] = 'Animation to see which triggers were used or ' \
+                            'missed'
 
     analysis = ifo + ':INJECTION'
 
