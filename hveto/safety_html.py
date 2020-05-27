@@ -183,6 +183,8 @@ def write_hveto_safety_page(rounds, thresh, inj_img=None):
                       './segment.xml.gz', True)
     add_file_download(page, 'output', 'Channel summary', 'CSV',
                       './safety_summary.csv', False)
+    add_file_download(page, 'output', 'Logfile', 'TXT',
+                       './safety-log.txt', True)
 
     page.tbody.close()
     page.table.close()
