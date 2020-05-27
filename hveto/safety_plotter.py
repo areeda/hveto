@@ -83,7 +83,7 @@ def inj_comp_plot(chan, prim_evts, trigs, win, odir):
     ax.scatter(trigs[t], trigs[f], c=trigs[s], marker='o')
     plot.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
                       label='Signal-to-noise ratio (SNR)', ax=ax)
-    idx = find_coincidences(trigs[t], prim_evts[t], 0.1)
+    idx = find_coincidences(trigs[t], prim_evts[t], win)
     if len(idx) > 0:
         ax.scatter(trigs[t][idx], trigs[f][idx],
                    color='r', marker='+')
