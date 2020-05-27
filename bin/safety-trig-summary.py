@@ -30,11 +30,8 @@ __version__ = '0.0.1'
 __process_name__ = 'safety-trig-summary'
 
 import argparse
-import glob
-import h5py
 import logging
 import os
-import re
 import subprocess
 
 from gwpy.table import EventTable
@@ -64,6 +61,8 @@ if __name__ == "__main__":
                         help='Start of injections')
     parser.add_argument('-e', '--end', type=to_gps,
                         help='End of injections or duration')
+    parser.add_argument('-n', '--noplot', action='store_true', help=
+                        'No plotting just table')
 
     args = parser.parse_args()
     start = args.start
@@ -137,6 +136,9 @@ if __name__ == "__main__":
               '{:.2f}, {:.2f}'
               .format(chan, len(trigs), len(t2), tmin, tmax, fmin, fmax,
                       smin, smax))
+        if args.noplot:
+            continue
+
         if len(trigs) > 0:
             idx = find_coincidences(prim_evts[t], trigs[t], 0.1)
             if idx is  None or len(idx) == 0:
