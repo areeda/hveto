@@ -324,6 +324,8 @@ def veto(table, segmentlist):
     keep : `numpy.recarray`
         the reduced table of events that were not coincident with any
         segments
+    removed: `numpy.recarray`
+        Table of events removed by veto segments
     """
     table.sort('time')
     times = table['time']

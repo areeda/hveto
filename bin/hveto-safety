@@ -81,12 +81,12 @@ def safety_find_all_coincidences(primary, auxiliary, snrs, windows, live_time):
     prim_evts = primary[prim_chan]
     prim_time = prim_evts['time']
 
-    for chan, evts in auxiliary.items():
+    for chan, aux_evts in auxiliary.items():
         cur_sig = 0
         for snr in snrs:
-            aux_time = evts[evts['snr'] > snr]['time']
+            aux_time = aux_evts[aux_evts['snr'] > snr]['time']
             for win in windows:
-                coincs, sig = coinc_significance(prim_time, aux_time, win,
+                prim_coincs, sig = coinc_significance(prim_time, aux_time, win,
                                                  live_time)
                 if sig > cur_sig:
                     try:
@@ -95,8 +95,13 @@ def safety_find_all_coincidences(primary, auxiliary, snrs, windows, live_time):
                         prob = 0
                     mu = prob * aux_time.size
 
-                    coinc_tbl = prim_evts[coincs]
-                    tmp = {'coincs': coinc_tbl, 'win': win, 'snr': snr,
+                    coinc_tbl = prim_evts[prim_coincs]
+                    # we also want aux coincidences
+                    aux_coincs, bsig  = coinc_significance(aux_time, prim_time,
+                                                 win, live_time)
+                    aux_tbl = aux_evts[aux_coincs]
+                    tmp = {'coincs': coinc_tbl, 'aux_coincs': aux_tbl,
+                           'win': win, 'snr': snr,
                            'significance': sig, 'mu': mu}
                     cur_sig = sig
         if cur_sig > 0:
@@ -247,7 +252,9 @@ def safety_calc(cp, logger, outdir, inifile,
             dt = results['win']
             snr = results['snr']
             sig = results['significance']
-            coinc1 = results['coincs']
+
+
+            coinc1 = results['aux_coincs']
             trig_cnt = len(coinc1)
             mu = results['mu']
 
@@ -317,7 +324,7 @@ def safety_calc(cp, logger, outdir, inifile,
                 winner = chan_stat
                 round.efficiency = (len(vetoed), len(primary_vetoed) +
                                     len(vetoed))
-                round.use_percentage = (len(coinc1), len(chan_stat.events))
+                round.use_percentage = (len(avetoed), len(chan_stat.events))
                 round.cum_efficiency = round.efficiency
                 round.cum_deadtime = round.deadtime
 
@@ -327,13 +334,13 @@ def safety_calc(cp, logger, outdir, inifile,
                                         % (ifo, round.n, start, duration))
                 for tag, arr in zip(
                         ['VETOED', 'COINCS'],
-                        [vetoed, coinc1]):
+                        [vetoed, avetoed]):
                     trig_fname = trigfile % tag
                     arr.write(trig_fname, format='ascii', overwrite=True)
                     logger.debug("Round %d %s events written to %s"
                                  % (round.n, tag.lower(), trig_fname))
                     round.files[tag] = trig_fname
-                round.n_coincs = len(coinc1)
+                round.n_coincs = len(avetoed)
                 round.n_vetoed = len(vetoed)
                 logger.debug('%4d. %s ' % (round.n, chan_stat.name))
                 # log results

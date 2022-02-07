@@ -107,7 +107,7 @@ if __name__ == "__main__":
     elif 'ligo-la' in host:
         ifo = 'L1'
 
-    logger.debug('IFO set to {:s}'.format(ifo))
+    logger.debug('IFO pre set to {}'.format(ifo))
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      prog=__process_name__)
