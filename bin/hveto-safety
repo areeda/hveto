@@ -138,18 +138,18 @@ def safety_calc(cp, logger, outdir, inifile,
     ROUND_CAPTION['inj'] = 'Injection time comparision of primary and ' \
                            'auxiliary channel triggers. ' \
                            'First picture: Frequency versus time ' \
-                            'graph of all triggers in the primary channel ' \
-                            'before this hveto round (dots colored by ' \
-                            'signal-to-noise ratio) and those triggers that ' \
-                            'are vetoed by this round (red plusses). ' \
-                            'Second picture: Freuquency versus time graph ' \
-                            'of the auxiliary channel triggers before this ' \
-                            'round (dots colored by signal-to-noise ratio), ' \
-                            'those above the threshold selected for this ' \
-                            'round (yellow plusses, these are the triggers ' \
-                            'used to construct the veto), and those ' \
-                            'triggers that actually veto one of the ' \
-                            'primary channel triggers (red plusses).'
+                           'graph of all triggers in the primary channel ' \
+                           'before this hveto round (dots colored by ' \
+                           'signal-to-noise ratio) and those triggers that ' \
+                           'are vetoed by this round (red plusses). ' \
+                           'Second picture: Freuquency versus time graph ' \
+                           'of the auxiliary channel triggers before this ' \
+                           'round (dots colored by signal-to-noise ratio), ' \
+                           'those above the threshold selected for this ' \
+                           'round (yellow plusses, these are the triggers ' \
+                           'used to construct the veto), and those ' \
+                           'triggers that actually veto one of the ' \
+                           'primary channel triggers (red plusses).'
 
     ROUND_CAPTION['anim'] = 'Animation to see which triggers were used or ' \
                             'missed. First picture: Frequency versus time ' \
@@ -247,12 +247,15 @@ def safety_calc(cp, logger, outdir, inifile,
     sum_file = outdir + "/safety_summary.csv"
 
     with open(sum_file, 'w') as summary_csv:
+        # CSV column name
+        vals = 'chan, significance, N-coinc, N-expected, N-aux, ' \
+               'N-coinc/N-expected, SNR, dT, was unsafe, is unsafe, round '
+        print(vals, file=summary_csv)
 
         for chan, results in all_chan_results.items():
             dt = results['win']
             snr = results['snr']
             sig = results['significance']
-
 
             coinc1 = results['aux_coincs']
             trig_cnt = len(coinc1)
@@ -273,11 +276,6 @@ def safety_calc(cp, logger, outdir, inifile,
                 logger.info('{:s} had zero trigger coincidences'.
                             format(chan))
 
-            # CSV column name
-            vals = 'chan, significance, N-coinc, N-expected, N-aux, ' \
-                   'N-coinc/N-expected, SNR, dT, was unsafe, is unsafe '
-            print(vals, file=summary_csv)
-
             name = chan_stat.name
 
             allaux = auxiliary[name][auxiliary[name]['snr'] >= chan_stat.snr]
@@ -286,17 +284,11 @@ def safety_calc(cp, logger, outdir, inifile,
             chan_stat.significance = sig
             chan_num += 1
 
-            was_safe  = 'Unsafe' if name in _unsafe else 'Safe'
+            was_safe = 'Unsafe' if name in _unsafe else 'Safe'
             is_safe = 'Unsafe' if sig > safety_cutoff else 'Safe'
 
             expected = chan_stat.ncoinc / chan_stat.mu \
-                if chan_stat.mu != 0 else 0;
-
-            vals = '%s,%.3f,%d,%.3f,%.0f,%.4f,%.1f,%.2f,%s, %s' %\
-                   (name, chan_stat.significance, chan_stat.ncoinc,
-                    chan_stat.mu, len(allaux), expected, chan_stat.snr,
-                    chan_stat.window, was_safe, is_safe)
-            print(vals, file=summary_csv)
+                if chan_stat.mu != 0 else 0
 
             if sig > safety_min and chan_num <= safety_max_rounds:
 
@@ -361,6 +353,12 @@ def safety_calc(cp, logger, outdir, inifile,
                                 round.use_percentage,round.efficiency,
                                 (' ,'.join(f'{x:.2f}' for x in round.deadtime))
                             ))
+                vals = '%s,%.3f,%d,%.3f,%.0f,%.4f,%.1f,%.2f,%s, %s, %d' % \
+                       (name, chan_stat.significance, chan_stat.ncoinc,
+                        chan_stat.mu, len(allaux), expected, chan_stat.snr,
+                        chan_stat.window, was_safe, is_safe, round.n)
+                print(vals, file=summary_csv, flush=True)
+
                 pngname = os.path.join(plotdir, '%s-HVETO_%%s_SAFETY_'
                                                 'ROUND_%03d-%d-%d.png' %
                                        (ifo, round.n, start, duration))
@@ -501,16 +499,16 @@ def safety_calc(cp, logger, outdir, inifile,
             # end of round processing, any channels left over
             nused = len(olddir)
             remaining = list()
-            for name in auxchannels:
-                if not name in all_chan_results.keys():
-                    was_safe = 'Unsafe' if name in _unsafe else 'Safe'
-                    is_safe = 'Safe'
-                    allaux = auxiliary[name]
+        for name in auxchannels:
+            if name not in all_chan_results.keys():
+                was_safe = 'Unsafe' if name in _unsafe else 'Safe'
+                is_safe = 'Safe'
+                allaux = auxiliary[name]
 
-                    vals = '%s,%.3f,%d,%.3f,%.0f,%.4f,%.1f,%.2f,%s, %s' % \
-                           (name, 0, 0, 0, len(allaux), 0, 0, 0, was_safe,
-                            is_safe)
-                    print(vals, file=summary_csv)
+                vals = '%s,%.3f,%d,%.3f,%.0f,%.4f,%.1f,%.2f,%s, %s, 0' % \
+                       (name, 0, 0, 0, len(allaux), 0, 0, 0, was_safe,
+                        is_safe)
+                print(vals, file=summary_csv)
 
     # -- write HTML
     # prepare html variables
