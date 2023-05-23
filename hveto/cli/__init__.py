@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) Louisiana State University (2013)
+# Copyright (C) Alex Urban (2020)
 #
-# This file is part of the hveto python package.
+# This file is part of hveto.
 #
 # hveto is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,28 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with hveto.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Setup the Hveto package
+"""Command-line interfaces for hveto
+
+The modules contained within this subpackage are all rendered as
+console_script entry points.
 """
 
-from setuptools import setup
-
-import versioneer
-
-# versioneer
-version = versioneer.get_version()
-cmdclass = versioneer.get_cmdclass()
-
-# import sphinx commands
-try:
-    from sphinx.setup_command import BuildDoc
-except ImportError:
-    pass
-else:
-    cmdclass['build_sphinx'] = BuildDoc
-
-# run setup
-# NOTE: all other metadata and options come from setup.cfg
-setup(
-    version=version,
-    cmdclass=cmdclass,
-)
+__author__ = 'Alex Urban <alexander.urban@ligo.org>'
