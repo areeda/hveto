@@ -558,8 +558,8 @@ def plot_table(tbl, name, qcpath, tlim, ylim=None, epoch=None):
     qcplot = tbl.scatter('time', 'frequency', color='snr', vmin=0, vmax=75)
     ax = qcplot.gca()
     qcplot.suptitle(name, fontsize=18)
-    ax.grid(b=True, which='major', color='k', linestyle='solid')
-    ax.grid(b=True, which='minor', color='0.06', linestyle='dotted')
+    ax.grid(visible=True, which='major', color='k', linestyle='solid')
+    ax.grid(visible=True, which='minor', color='0.06', linestyle='dotted')
     ax.colorbar(label='SNR')
     ax.set_xlim(tlim[0], tlim[1])
     if ylim:

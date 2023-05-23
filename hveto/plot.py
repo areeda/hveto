@@ -268,7 +268,7 @@ def veto_scatter(outfile, a, b, label1='All', label2='Vetoed', x='time',
                 colorargs['norm'] = LogNorm(vmin=clim[0], vmax=clim[1])
         a = a.copy()
         a.sort(color)
-        m = ax.scatter(a[x], a[ya], c=a[color], label=label1, **colorargs)
+        m = ax.scatter(a[x], a[ya], c=a[color], label=label1)
         # add colorbar
         ax.colorbar(mappable=m, cmap=cmap, label=clabel)
     if isinstance(b, (list, tuple)) and len(b) == 2:

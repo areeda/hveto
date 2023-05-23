@@ -49,8 +49,8 @@ def inj_comp_plot(chan, prim_evts, trigs, win, odir):
 
     ax.scatter(prim_evts[t], prim_evts[f], c=prim_evts[s],
                marker='o')
-    plot.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
-                      label='Signal-to-noise ratio (SNR)', ax=ax)
+    # plot.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
+    #                   label='Signal-to-noise ratio (SNR)', ax=ax)
 
     ax.scatter(prim_evts[t][idx_pri], prim_evts[f][idx_pri],
                color='k', marker='+')
@@ -68,8 +68,8 @@ def inj_comp_plot(chan, prim_evts, trigs, win, odir):
     ax2 = plot2.gca()
     ax2.scatter(prim_evts[t], prim_evts[f], c=prim_evts[s],
                 marker='o')
-    plot2.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
-                       label='Signal-to-noise ratio (SNR)')
+    # plot2.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
+    #                    label='Signal-to-noise ratio (SNR)')
     ax2.scatter(prim_evts[t][idx_pri], prim_evts[f][idx_pri],
                 color='k', marker='+')
     ax2.set_title('Injections ({:d}/{:d} coincs)'.
@@ -80,14 +80,13 @@ def inj_comp_plot(chan, prim_evts, trigs, win, odir):
     ax2.set_xscale('auto-gps')
     ax2.set_xlim(tlim)
 
-    plot2.savefig(inj_fname, edgecolor='white', figsize=[8, 6],
-                  dpi=100, bbox_inches='tight')
+    plot2.savefig(inj_fname, edgecolor='white', bbox_inches='tight')
     plot2.close()
 
     ax = plot.add_subplot(2, 1, 2, sharex=ax)
     ax.scatter(trigs[t], trigs[f], c=trigs[s], marker='o')
-    plot.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
-                      label='Signal-to-noise ratio (SNR)', ax=ax)
+    # plot.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
+    #                   label='Signal-to-noise ratio (SNR)', ax=ax)
     idx_pri = find_coincidences(trigs[t], prim_evts[t], win)
     if len(idx_pri) > 0:
         ax.scatter(trigs[t][idx_pri], trigs[f][idx_pri],
@@ -105,8 +104,8 @@ def inj_comp_plot(chan, prim_evts, trigs, win, odir):
 
     ax3 = plot3.gca()
     ax3.scatter(trigs[t], trigs[f], c=trigs[s], marker='o')
-    plot3.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
-                       label='Signal-to-noise ratio (SNR)')
+    # plot3.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
+    #                    label='Signal-to-noise ratio (SNR)')
     idx_aux = find_coincidences(trigs[t], prim_evts[t], win)
     if len(idx_aux) > 0:
         ax3.scatter(trigs[t][idx_aux], trigs[f][idx_aux],
@@ -120,14 +119,12 @@ def inj_comp_plot(chan, prim_evts, trigs, win, odir):
     ax3.set_xlim(tlim)
 
     fname = os.path.join(odir, chan.replace(':', '-') + '-2subs.png')
-    plot.savefig(fname, edgecolor='white', figsize=[8, 14],
-                 dpi=100, bbox_inches='tight')
+    plot.savefig(fname, edgecolor='white', bbox_inches='tight')
     plot.close()
 
     fname3 = os.path.join(odir, chan.replace(':', '-') +
                           '--obs.png')
-    plot3.savefig(fname3, edgecolor='white', figsize=[8, 6],
-                  dpi=100, bbox_inches='tight')
+    plot3.savefig(fname3, edgecolor='white', bbox_inches='tight')
     plot3.close()
 
     gif_name = os.path.join(odir, chan.replace(':', '-') +

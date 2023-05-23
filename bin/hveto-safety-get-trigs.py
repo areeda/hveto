@@ -89,8 +89,8 @@ def plot_tbl(table, channel):
     ax.set_ylabel('Frequency [Hz]')
     plot.suptitle('Omicron triggers ' + channel)
 
-    plot.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
-                      label='Signal-to-noise ratio (SNR)')
+    # plot.add_colorbar(clim=[1, 75], cmap='viridis', log=True,
+    #                   label='Signal-to-noise ratio (SNR)')
     return plot
 
 if __name__ == "__main__":
@@ -156,8 +156,7 @@ if __name__ == "__main__":
     logger.info('Primary triggers written to {:s}'.format(prim_filename))
 
     prim_plot_file = args.outbase + '-primary.png'
-    prim_plot.savefig(prim_plot_file, edgecolor='white', figsize=[12, 6],
-                 dpi=100, bbox_inches='tight')
+    prim_plot.savefig(prim_plot_file, edgecolor='white', bbox_inches='tight')
     logger.info('Primary trig plot written to {:s}'.format(prim_plot_file))
 
     trig_path = os.path.join('/home/detchar/triggers', ifo)
