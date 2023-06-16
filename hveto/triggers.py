@@ -33,6 +33,7 @@ import gwtrigfind
 
 from gwpy.io import cache as io_cache
 from gwpy.io.utils import file_list
+from gwpy.io.registry import get_read_format
 from gwpy.table import EventTable
 from gwpy.table.filters import in_segmentlist
 from gwpy.table.io.pycbc import filter_empty_files as filter_empty_pycbc_files
@@ -224,7 +225,7 @@ def find_auxiliary_channels(etg, gps='*', ifo='*', cache=None):
 
 
 def _sanitize_name(name):
-    return re.sub(r"[-_\.]", "_", name).lower()
+    return re.sub(r"[-_.]", "_", name).lower()
 
 
 def _format_params(channel, etg, fmt, trigfind_kwargs, read_kwargs):
@@ -241,8 +242,7 @@ def _format_params(channel, etg, fmt, trigfind_kwargs, read_kwargs):
 
     # format params
     for key in read_kwargs:
-        if (key.endswith(('columns', 'names', 'branches')) and
-                isinstance(read_kwargs[key], str)):
+        if key.endswith(('columns', 'names', 'branches')) and isinstance(read_kwargs[key], str):
             read_kwargs[key] = [x.strip() for x in read_kwargs[key].split(',')]
 
     # custom params for ETGs
@@ -253,8 +253,7 @@ def _format_params(channel, etg, fmt, trigfind_kwargs, read_kwargs):
 
 
 def get_triggers(channel, etg, segments, cache=None, snr=None, frange=None,
-                 raw=False, extra_times=None, trigfind_kwargs={}, 
-                 **read_kwargs):
+                 raw=False, extra_times=None, trigfind_kwargs={}, **read_kwargs):
     """Get triggers for the given channel
     """
     etg = _sanitize_name(etg)
@@ -263,6 +262,9 @@ def get_triggers(channel, etg, segments, cache=None, snr=None, frange=None,
         readfmt = read_kwargs.pop("format", DEFAULT_FORMAT[etg])
     except KeyError:
         raise ValueError("unsupported ETG {!r}".format(etg))
+    if not readfmt and cache:
+        # try to identify format from files in cache
+        readfmt = get_read_format(EventTable, cache[0], {}, {})
     trigfind_kwargs, read_kwargs = _format_params(
         channel,
         etg,
@@ -284,13 +286,27 @@ def get_triggers(channel, etg, segments, cache=None, snr=None, frange=None,
         cachesegs = io_cache.cache_segments(segcache)
         outofbounds = abs(cachesegs - segaslist)
         if segcache:
-            if len(segcache) == 1:  # just pass the single filename
-                segcache = segcache[0]
-            new = EventTable.read(segcache, **read_kwargs)
-            new.meta = {k: new.meta[k] for k in TABLE_META if new.meta.get(k)}
-            if outofbounds:
-                new = new[in_segmentlist(new[new.dtype.names[0]], segaslist)]
-            tables.append(new)
+            # if len(segcache) == 1:  # just pass the single filename
+            #     segcache = segcache[0]
+            # read trigger files one by one so we can ignore empty ones
+
+            # new = EventTable.read(segcache, **read_kwargs)
+            new: EventTable = None
+            for trig_file in segcache:
+                trig_tbl = EventTable.read(trig_file, **read_kwargs)
+                if len(trig_tbl) > 0:
+                    if new:
+                        new = vstack_tables([new, trig_tbl])
+                    else:
+                        new = trig_tbl
+                else:
+                    pass    # place for a breakpoint
+
+            if new is not None and len(new) > 0:
+                new.meta = {k: new.meta[k] for k in TABLE_META if new.meta.get(k)}
+                if outofbounds:
+                    new = new[in_segmentlist(new[new.dtype.names[0]], segaslist)]
+                tables.append(new)
     if len(tables):
         table = vstack_tables(tables)
     else:

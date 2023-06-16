@@ -42,6 +42,7 @@ from gwpy.table import EventTable
 from gwdetchar import cli
 from gwdetchar.io.html import (FancyPlot, cis_link)
 from gwdetchar.omega import batch
+from gwpy.time import tconvert
 
 from hveto import (__version__, config, core, html, utils)
 from hveto.segments import (write_ascii as write_ascii_segments,
@@ -233,9 +234,9 @@ def main(args=None):
 
     # log startup
     LOGGER.info("-- Welcome to Hveto --")
-    LOGGER.info("GPS start time: %d" % start)
-    LOGGER.info("GPS end time: %d" % end)
-    LOGGER.info("Interferometer: %s" % ifo)
+    LOGGER.info(f"GPS start time: {start} - {tconvert(start)}")
+    LOGGER.info(f"GPS end time: {end} - {tconvert(end)}")
+    LOGGER.info(f"Interferometer: {ifo}")
 
     # -- initialisation -------------------------
 
@@ -261,7 +262,7 @@ def main(args=None):
 
     # prepare html variables
     htmlv = {
-        'title': '%s Hveto | %d-%d' % (ifo, start, end),
+        'title': f'{ifo} Hveto | {start} - {end}',
         'config': None,
         'prog': PROG,
         'context': ifo.lower(),
@@ -420,7 +421,6 @@ def main(args=None):
     if pcache is not None:  # auto-detect the file format
         LOGGER.debug('Unsetting the primary trigger file format')
         preadkw['format'] = None
-        preadkw['path'] = 'triggers'
     ptrigfindkw = cp.getparams('primary', 'trigfind-')
     primary = get_triggers(pchannel, petg, analysis.active, snr=psnr,
                            frange=pfreq, cache=pcache, nproc=args.nproc,
@@ -431,8 +431,7 @@ def main(args=None):
     if len(primary):
         LOGGER.info("Read %d events for %s" % (len(primary), pchannel))
     else:
-        message = "No events found for %r in %d seconds of livetime" % (
-           pchannel, livetime)
+        message = "No events found for %r in %d seconds of livetime" % (pchannel, livetime)
         LOGGER.critical(message)
 
     # cluster primary triggers
@@ -479,7 +478,6 @@ def main(args=None):
     if acache is not None:  # auto-detect the file format
         LOGGER.debug('Unsetting the auxiliary trigger file format')
         areadkw['format'] = None
-        areadkw['path'] = 'triggers'
     atrigfindkw = cp.getparams('auxiliary', 'trigfind-')
 
     # map with multiprocessing
@@ -554,11 +552,10 @@ def main(args=None):
         if rnd.n > 1:
             sigfile = os.path.join(
                 signidir,
-                '%s-HVETO_SIGNIFICANT_CHANNELS_ROUND_%d-%d-%d.txt' % (
-                    ifo, rnd.n-1, start, duration))
+                '%s-HVETO_SIGNIFICANT_CHANNELS_ROUND_%d-%d-%d.txt' % (ifo, rnd.n - 1, start, duration))
             # These are the channel names
             sig_chans = list(oldsignificances.keys())  # noqa: F821
-            # These are the signficance values
+            # These are the significance values
             sig_vals = [round(i, 4) for
                         i in list(oldsignificances.values())]  # noqa: F821
             sig_et = EventTable([sig_chans, sig_vals],
@@ -787,8 +784,7 @@ def main(args=None):
 
         # move to the next round
         rounds.append(rnd)
-        rnd = core.HvetoRound(rnd.n + 1, pchannel, rank=scol,
-                              segments=rnd.segments-rnd.vetoes)
+        rnd = core.HvetoRound(rnd.n + 1, pchannel, rank=scol, segments=rnd.segments - rnd.vetoes)
 
     # write file with all segments
     segfile = os.path.join(

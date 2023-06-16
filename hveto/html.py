@@ -20,13 +20,15 @@
 """
 
 import os.path
+from datetime import timedelta
 from functools import wraps
 
 from MarkupPy import markup
 
 from gwdetchar.io import html as gwhtml
+from gwpy.time import tconvert
 
-from ._version import get_versions
+from . import __version__
 
 __author__ = 'Duncan Macleod <duncan.macleod@ligo.org>'
 __credits__ = 'Josh Smith, Joe Areeda, Alex Urban'
@@ -87,7 +89,9 @@ def banner(ifo, start, end):
     # write banner
     page.div(class_='page-header', role='banner')
     page.h1("%s HierarchicalVeto" % ifo, class_='pb-2 mt-3 mb-2 border-bottom')
-    page.h3("%d-%d" % (start, end), class_='mt-3')
+
+    td = timedelta(seconds=(end - start))
+    page.h3(f"{start} - {end} {tconvert(start)} - {tconvert(end)} -- {td}", class_='mt-3')
     page.div.close()
     return page()
 
@@ -101,8 +105,9 @@ def wrap_html(func):
     @wraps(func)
     def decorated_func(ifo, start, end, *args, **kwargs):
         # set page init args
+        td = timedelta(seconds=(end - start))
         initargs = {
-            'title': '%s Hveto | %d-%d' % (ifo, start, end),
+            'title': f'{ifo} Hveto | {start} - {end} ({end-start}) {tconvert(start)} - {tconvert(end)} {td}',
             'base': os.path.curdir,
         }
         for key in ['title', 'base']:
@@ -136,8 +141,11 @@ def wrap_html(func):
         page.add(str(func(*args, **kwargs)))
         # close page with custom footer
         index = os.path.join(outdir, 'index.html')
-        version = get_versions()['version']
-        commit = get_versions()['full-revisionid']
+        version = __version__
+        if "dev" in __version__:
+            commit = __version__.rsplit("g", 1)[1]
+        else:
+            commit = __version__
         url = 'https://github.com/gwdetchar/hveto/tree/{}'.format(commit)
         gwhtml.close_page(page, index, about=about,
                           link=('hveto-%s' % version, url, 'GitHub'),
@@ -228,7 +236,7 @@ def write_summary(
                      'cum_efficiency', 'cum_deadtime']:
             a, b = getattr(r, attr)
             try:
-                pc = a/b * 100.
+                pc = a / b * 100.
             except ZeroDivisionError:
                 pc = 0.
             if attr.endswith('deadtime'):
