@@ -21,11 +21,10 @@
 
 import os
 import shutil
-from unittest import mock
 
 import pytest
 
-from gwdetchar.utils.utils import parse_html
+from gwdetchar.utils import parse_html
 
 from .. import html
 
@@ -37,7 +36,7 @@ BANNER = """<div class="page-header" role="banner">
 NAVBAR = """<nav class="navbar fixed-top navbar-expand-md navbar-h1 shadow-sm">
 <div class="container-fluid">
 <div class="navbar-brand border border-white rounded">H1 Hveto</div>
-<button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+<button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target=".navbar-collapse">
 <span class="navbar-toggler-icon"></span>
 </button>
 <div class="collapse navbar-collapse justify-content-between">
@@ -97,14 +96,7 @@ def test_bold_param(args, kwargs, result):
 
 # -- end-to-end tests ---------------------------------------------------------
 
-@mock.patch(
-    "gwdetchar.io.html.package_list",
-    return_value=[
-        {"name": "package-1", "version": "1.0.0"},
-        {"name": "package-2", "version": "2.0.0"},
-    ],
-)
-def test_write_hveto_page(mock_package_list, tmpdir):
+def test_write_hveto_page(tmpdir):
     os.chdir(str(tmpdir))
     config = 'test.ini'
     with open(config, 'w') as fobj:
