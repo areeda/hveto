@@ -305,7 +305,7 @@ def main(args=None):
     # read configuration
     cp = config.HvetoConfigParser(ifo=ifo)
     cp.read(args.config_file)
-    LOGGER.info("Parsed configuration file(s)")
+    LOGGER.info(f"Parsed configuration file(s): {args.config_file}")
 
     # format output directory
     outdir = _abs_path(args.output_directory)
@@ -357,11 +357,12 @@ def main(args=None):
     }
 
     # get segments
-    LOGGER.info("Retrieving segments...")
     get_seg_start = datetime.datetime.now()
     aflag = cp.get('segments', 'analysis-flag')
     url = cp.get('segments', 'url')
     padding = tuple(cp.getfloats('segments', 'padding'))
+    LOGGER.info(f"Retrieving segments from {url} for {aflag} ...")
+
     if args.analysis_segments:
         segs_ = DataQualityDict.read(args.analysis_segments, gpstype=float)
         analysis = segs_[aflag]
