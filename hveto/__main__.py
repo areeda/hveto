@@ -207,6 +207,24 @@ def create_parser():
             'When omega scans are requested, do not submit DAG. '
             'Used when hveto is run in condor vanilla universe'),
     )
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action='count',
+        default=2,
+        help='print verbose output, give more times for more '
+             'verbose output',
+    )
+    parser.add_argument(
+        '-N',
+        '--max-round',
+        action='store',
+        metavar='N',
+        type=int,
+        default=0,
+        help=('maximum number of rounds to run, 0 means run until significance '
+              'drops below the threshold set in the configuration'),
+    )
 
     # output options
     pout = parser.add_argument_group('Output options')
@@ -267,7 +285,7 @@ def make_drop_table(oldsignificances, newsignificances, out_file=None, cutoff=1.
                 post.append(float('nan'))
 
     drop_table = EventTable([channels, pre, post], names=['channels', 'pre_significance', 'post_significance'],
-                            dtype=[f'<U{chan_max_chars}', np.float64, np.float64]   )
+                            dtype=[f'<U{chan_max_chars}', np.float64, np.float64])
     drop_table.sort('pre_significance', reverse=True)
     col_formats = {'channels': f'{chan_max_chars}s', 'pre_significance': '{:8.2f}', 'post_significance': '{:8.2f}'}
     drop_table.write(out_file, format='ascii.fixed_width', overwrite=True, formats=col_formats)
@@ -293,6 +311,11 @@ def main(args=None):
     start = int(args.gpsstart)
     end = int(args.gpsend)
     duration = end - start
+
+    if args.verbose > 1:
+        LOGGER.setLevel(logging.DEBUG)
+    else:
+        LOGGER.setLevel(logging.INFO)
 
     # log startup
     LOGGER.info("-- Welcome to Hveto --")
@@ -649,7 +672,7 @@ def main(args=None):
                 '%s-HVETO_SIGNIFICANT_CHANNELS_ROUND_%d-%d-%d.txt' % (ifo, rnd.n - 1, start, duration))
             sig_drop_table = make_drop_table(oldsignificances, newsignificances, sigfile)
             rounds[-1].files['SIG_TBL'] = sigfile
-            LOGGER.info(f"Significance events written to {Path(sigfile).absolute()}")
+            LOGGER.info(f"{len(sig_drop_table)}Significance events written to {Path(sigfile).absolute()}")
             svg = (pngname % 'SIG_DROP').replace('.png', '.svg')  # noqa: F821
             plot.significance_drop(
                 svg, oldsignificances, newsignificances,  # noqa: F821
@@ -661,10 +684,11 @@ def main(args=None):
         oldsignificances = newsignificances  # noqa: F841
 
         # break out of the loop if the significance is below stopping point
-        if winner.significance < minsig:
-            LOGGER.info("Maximum signifiance below stopping point")
+        # or if we have processed the maximum number round specified on the command line
+        if winner.significance < minsig or (args.N > 0 and rnd.n > args.N):
+            LOGGER.info("Maximum signifiance below stopping point or maximum rounds analyzed")
             LOGGER.debug("    (%.2f < %.2f)" % (winner.significance, minsig))
-            LOGGER.info("-- Rounds complete! --")
+            LOGGER.info(f"--{rnd.n} Rounds complete! --")
             break
 
         # work out the vetoes for this round
